@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Баскетбол. Калькулятор исходов с учетом фаз Луны</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary-color: #fdbb2d;
+            --secondary-color: #1a2a6c;
+            --background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            --container-bg: rgba(0, 0, 0, 0.7);
+            --text-color: #fff;
+            --card-bg: rgba(30, 30, 50, 0.8);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --input-color: #333;
+            --stats-bg: rgba(40, 40, 60, 0.6);
+            --men-color: #3498db;
+            --women-color: #e91e63;
+        }
+        
+        body.light-theme {
+            --primary-color: #2c3e50;
+            --secondary-color: #fdbb2d;
+            --background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            --container-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #2c3e50;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --input-bg: rgba(255, 255, 255, 0.95);
+            --input-color: #2c3e50;
+            --stats-bg: rgba(255, 255, 255, 0.7);
+        }
+        
+        body {
+            background: var(--background);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: background 0.5s ease;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 0;
+            padding: 10px;
+            box-shadow: none;
+        }
+        
+        .header-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 5px;
+            display: flex;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-icon, .help-icon {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-size: 16px;
+        }
+        
+        .championship-selector {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 5px;
+            z-index: 100;
+            cursor: pointer;
+            width: 180px;
+        }
+        
+        .championship-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .championship-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            margin-top: 5px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .championship-dropdown.show {
+            display: block;
+        }
+        
+        .championship-option {
+            padding: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.85rem;
+        }
+        
+        .championship-option:hover {
+            background: rgba(253, 187, 45, 0.2);
+        }
+        
+        .championship-option.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .championship-format {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 2px;
+        }
+        
+        .gender-selector {
+            position: fixed;
+            top: 60px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 5px;
+            z-index: 100;
+            cursor: pointer;
+            width: 180px;
+        }
+        
+        .gender-buttons {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .gender-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            background: rgba(37, 37, 64, 0.8);
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.85rem;
+        }
+        
+        .gender-btn.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .gender-btn.men.active {
+            background: var(--men-color);
+        }
+        
+        .gender-btn.women.active {
+            background: var(--women-color);
+        }
+        
+        header {
+            text-align: center;
+            padding: 80px 0 15px 0;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .match-info {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .team {
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .team:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .vs {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            align-self: center;
+            padding: 0 10px;
+        }
+        
+        .score {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        
+        .match-details {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+        
+        .time-display {
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 8px;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .championship-info {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .stats-section {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 12px;
+            display: none;
+        }
+        
+        .stats-section.active {
+            display: block;
+        }
+        
+        .stats-title {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 6px;
+            font-size: 1.1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr;
+            gap: 8px;
+            text-align: center;
+        }
+        
+        .stats-item {
+            padding: 6px;
+            background: var(--stats-bg);
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .stats-header {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stats-editable {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px dashed var(--primary-color);
+            cursor: pointer;
+        }
+        
+        .odds-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        
+        .odds-section.active {
+            display: grid;
+        }
+        
+        .odds-card {
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .odds-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .odds-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .odds-editable {
+            border-bottom: 1px dashed var(--primary-color);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .main-content.active {
+            display: grid;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                padding: 15px;
+                border-radius: 12px;
+                margin: 10px auto;
+                max-width: 600px;
+            }
+            
+            .championship-selector, .gender-selector {
+                left: 15px;
+            }
+            
+            .championship-selector {
+                top: 15px;
+            }
+            
+            .gender-selector {
+                top: 70px;
+            }
+            
+            .header-controls {
+                right: 15px;
+                top: 15px;
+            }
+            
+            header {
+                padding: 15px 0;
+            }
+        }
+        
+        .input-section, .result-section {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 6px;
+            font-size: 1.1rem;
+        }
+        
+        .form-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background: var(--input-bg);
+            color: var(--input-color);
+            font-size: 0.85rem;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 8px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .instruction-btn {
+            background: #4caf50;
+            color: white;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        @media (min-width: 480px) {
+            .result-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .result-card.full-width {
+                grid-column: 1 / -1;
+            }
+        }
+        
+        .result-card {
+            background: rgba(40, 40, 60, 0.9);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .result-value {
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            margin-top: 4px;
+        }
+        
+        .positive {
+            color: #4caf50;
+        }
+        
+        .negative {
+            color: #f44336;
+        }
+        
+        .neutral {
+            color: #2196f3;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 12px;
+            color: var(--text-color);
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        .period-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .period-btn {
+            flex: 1;
+            margin: 0 3px 5px 3px;
+            padding: 5px;
+            background: #3949ab;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            min-width: 50px;
+        }
+        
+        .period-btn.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 12px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            background: rgba(37, 37, 64, 0.8);
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.85rem;
+        }
+        
+        .tab.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .custom-keyboard {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #333;
+            padding: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 6px;
+        }
+        
+        .keyboard-key {
+            width: 45px;
+            height: 35px;
+            margin: 3px;
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .keyboard-key-wide {
+            width: 70px;
+        }
+        
+        .keyboard-key-extra-wide {
+            width: 100px;
+        }
+        
+        .keyboard-close {
+            background: #f44336;
+            color: white;
+        }
+        
+        .keyboard-backspace {
+            background: #ff9800;
+            color: white;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .input-active {
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+        
+        .edit-icon {
+            margin-left: 5px;
+            color: var(--primary-color);
+            font-size: 0.75rem;
+        }
+        
+        body.light-theme .stats-editable {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        body.light-theme .result-card {
+            background: rgba(255, 255, 255, 0.7);
+        }
+        
+        body.light-theme .tab {
+            background: rgba(255, 255, 255, 0.7);
+        }
+        
+        body.light-theme .period-btn {
+            background: #5c6bc0;
+        }
+        
+        .stat-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: inherit;
+            text-align: center;
+            caret-color: transparent;
+        }
+        
+        .stat-input:focus {
+            outline: none;
+        }
+        
+        .calculated-odds {
+            font-size: 0.8rem;
+            color: #4caf50;
+            margin-top: 4px;
+        }
+        
+        .time-factor-display {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            color: #fdbb2d;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .data-item {
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .data-label {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .data-value {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        
+        body {
+            touch-action: manipulation;
+        }
+        
+        .psychology-note {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            color: #fdbb2d;
+            font-style: italic;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .instruction-step {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .instruction-step h3 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .instruction-list {
+            padding-left: 20px;
+        }
+        
+        .instruction-list li {
+            margin-bottom: 5px;
+        }
+        
+        .moon-phase-display {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            color: #9c88ff;
+            font-style: italic;
+        }
+        
+        .moon-icon {
+            margin-right: 5px;
+            font-size: 0.9rem;
+        }
+        
+        /* Убираем белую полосу в футере */
+        footer {
+            border-top: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-controls">
+            <div class="control-btn" id="help-btn">
+                <div class="help-icon">
+                    <i class="fas fa-question"></i>
+                </div>
+            </div>
+            <div class="control-btn" id="theme-switcher">
+                <div class="theme-icon">
+                    <i class="fas fa-moon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="championship-selector" id="championship-selector">
+            <div class="championship-button" id="championship-button">
+                <span id="selected-championship">NBA (4×12 мин)</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="championship-dropdown" id="championship-dropdown">
+                <div class="championship-option active" data-format="nba" data-periods="4" data-period-length="12" data-ot-length="5">
+                    NBA (4×12 мин)
+                    <div class="championship-format">4 периода по 12 минут</div>
+                </div>
+                <div class="championship-option" data-format="fibra" data-periods="4" data-period-length="10" data-ot-length="5">
+                    ФИБА (4×10 мин)
+                    <div class="championship-format">4 периода по 10 минут</div>
+                </div>
+                <div class="championship-option" data-format="three3-long" data-periods="4" data-period-length="12" data-ot-length="2">
+                    3×3 (4×12 мин)
+                    <div class="championship-format">4 периода по 12 минут</div>
+                </div>
+                <div class="championship-option" data-format="three3-short" data-periods="4" data-period-length="10" data-ot-length="2">
+                    3×3 (4×10 мин)
+                    <div class="championship-format">4 периода по 10 минут</div>
+                </div>
+                <div class="championship-option" data-format="four4" data-periods="2" data-period-length="10" data-ot-length="3">
+                    4×4 (2×10 мин)
+                    <div class="championship-format">2 тайма по 10 минут</div>
+                </div>
+                <div class="championship-option" data-format="cyber" data-periods="4" data-period-length="5" data-ot-length="2">
+                    Кибербаскетбол (4×5 мин)
+                    <div class="championship-format">4 периода по 5 минут, овертайм 2 минуты</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gender-selector" id="gender-selector">
+            <div class="gender-buttons">
+                <div class="gender-btn men active" data-gender="men">Мужчины</div>
+                <div class="gender-btn women" data-gender="women">Женщины</div>
+            </div>
+        </div>
+        
+        <header>
+            <h1>Баскетбол. Калькулятор исходов</h1>
+            <div class="match-details">
+                Разгромим букмекера в пух и прах
+            </div>
+        </header>
+        
+        <div class="championship-info" id="championship-info">
+            Формат: NBA - 4 периода по 12 минут, овертайм 5 минут
+        </div>
+        
+        <div class="match-info">
+            <div class="team" id="team-a">Команда А</div>
+            <div class="vs">VS</div>
+            <div class="team" id="team-b">Команда Б</div>
+            <div class="score" id="score-a-display">75</div>
+            <div class="score">:</div>
+            <div class="score" id="score-b-display">68</div>
+        </div>
+        
+        <div class="time-display" id="match-time-editable">
+            3-я четверть, 5:00 | Время: <span id="current-time">23:44:22</span>
+        </div>
+        
+        <div class="data-grid">
+            <div class="data-item">
+                <div class="data-label">Тотал</div>
+                <div class="data-value" id="total-display">--</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Фора</div>
+                <div class="data-value" id="handicap-display">--</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Текущий период</div>
+                <div class="data-value" id="period-display">3-й</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label">Оставшееся время</div>
+                <div class="data-value" id="time-display">5:00</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label" id="team-a-label">Команда А</div>
+                <div class="data-value" id="score-a-display-short">75</div>
+            </div>
+            <div class="data-item">
+                <div class="data-label" id="team-b-label">Команда Б</div>
+                <div class="data-value" id="score-b-display-short">68</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="stats">Статистика</div>
+            <div class="tab" data-tab="main">Основные</div>
+            <div class="tab" data-tab="analysis">Анализ</div>
+        </div>
+        
+        <div class="stats-section active" id="stats-tab">
+            <div class="stats-title">Статистика матча <i class="fas fa-edit edit-icon" id="edit-stats"></i></div>
+            <div class="stats-grid">
+                <div class="stats-item stats-header">Параметр</div>
+                <div class="stats-item stats-header" id="team-a-header">Команда А</div>
+                <div class="stats-item stats-header" id="team-b-header">Команда Б</div>
+                
+                <div class="stats-item">Штрафные броски</div>
+                <div class="stats-item stats-editable" data-field="team-a-free-throws">
+                    <span id="team-a-free-throws">9/13 (69%)</span>
+                </div>
+                <div class="stats-item stats-editable" data-field="team-b-free-throws">
+                    <span id="team-b-free-throws">13/17 (76%)</span>
+                </div>
+                
+                <div class="stats-item">2-х очковые</div>
+                <div class="stats-item stats-editable" data-field="team-a-two-pointers">
+                    <span id="team-a-two-pointers">16</span>
+                </div>
+                <div class="stats-item stats-editable" data-field="team-b-two-pointers">
+                    <span id="team-b-two-pointers">10</span>
+                </div>
+                
+                <div class="stats-item">3-х очковые</div>
+                <div class="stats-item stats-editable" data-field="team-a-three-pointers">
+                    <span id="team-a-three-pointers">7</span>
+                </div>
+                <div class="stats-item stats-editable" data-field="team-b-three-pointers">
+                    <span id="team-b-three-pointers">10</span>
+                </div>
+                
+                <div class="stats-item">Фолы</div>
+                <div class="stats-item stats-editable" data-field="team-a-fouls">
+                    <span id="team-a-fouls">26</span>
+                </div>
+                <div class="stats-item stats-editable" data-field="team-b-fouls">
+                    <span id="team-b-fouls">17</span>
+                </div>
+                
+                <div class="stats-item">Подборы</div>
+                <div class="stats-item stats-editable" data-field="team-a-rebounds">
+                    <span id="team-a-rebounds">32</span>
+                </div>
+                <div class="stats-item stats-editable" data-field="team-b-rebounds">
+                    <span id="team-b-rebounds">28</span>
+                </div>
+                
+                <div class="stats-item">Потери</div>
+                <div class="stats-item stats-editable" data-field="team-a-turnovers">
+                    <span id="team-a-turnovers">12</span>
+                </div>
+                <div class="stats-item stats-editable" data-field="team-b-turnovers">
+                    <span id="team-b-turnovers">10</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="odds-section" id="main-tab">
+            <div class="odds-card">
+                <div class="odds-title">П1 (<span id="team-a-short">КМД А</span>)</div>
+                <div class="odds-value odds-editable" id="odds-p1">1.81</div>
+                <div class="calculated-odds">Наш расчет: <span id="calculated-p1">1.92</span></div>
+            </div>
+            <div class="odds-card">
+                <div class="odds-title">П2 (<span id="team-b-short">КМД Б</span>)</div>
+                <div class="odds-value odds-editable" id="odds-p2">2.00</div>
+                <div class="calculated-odds">Наш расчет: <span id="calculated-p2">1.85</span></div>
+            </div>
+            <div class="odds-card">
+                <div class="odds-title">Тотал больше</div>
+                <div class="odds-value odds-editable" id="odds-total-over">1.95</div>
+                <div class="calculated-odds">Наш расчет: <span id="calculated-total-over">1.87</span></div>
+            </div>
+            <div class="odds-card">
+                <div class="odds-title">Тотал меньше</div>
+                <div class="odds-value odds-editable" id="odds-total-under">1.85</div>
+                <div class="calculated-odds">Наш расчет: <span id="calculated-total-under">1.93</span></div>
+            </div>
+        </div>
+        
+        <div class="main-content" id="analysis-tab">
+            <div class="input-section">
+                <h2>Ввод данных</h2>
+                
+                <div class="form-columns">
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="total-line">Тотал букмекера:</label>
+                            <input type="text" id="total-line" placeholder="Напр. 180.5" inputmode="none" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="current-period">Текущий период:</label>
+                            <select id="current-period">
+                                <option value="1">1-й период</option>
+                                <option value="2">2-й период</option>
+                                <option value="3" selected>3-й период</option>
+                                <option value="4">4-й период</option>
+                                <option value="ot">Овертайм</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="score-a">Очки команды А:</label>
+                            <input type="text" id="score-a" value="75" inputmode="none" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="handicap-line">Фора букмекера:</label>
+                            <input type="text" id="handicap-line" placeholder="Напр. -5.5" inputmode="none" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="time-remaining">Оставшееся время:</label>
+                            <input type="text" id="time-remaining" placeholder="Мин:сек" value="5:00" inputmode="none" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="score-b">Очки команды Б:</label>
+                            <input type="text" id="score-b" value="68" inputmode="none" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="avg-points">Ср. очки за период:</label>
+                    <input type="text" id="avg-points" value="45" placeholder="40-50" inputmode="none" readonly>
+                </div>
+                
+                <div class="period-controls">
+                    <button class="period-btn active" data-period="1">1-й</button>
+                    <button class="period-btn" data-period="2">2-й</button>
+                    <button class="period-btn" data-period="3">3-й</button>
+                    <button class="period-btn" data-period="4">4-й</button>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <h2>Результаты анализа</h2>
+                <div class="result-grid">
+                    <div class="result-card">
+                        <div class="result-title">Прогноз тотал матча:</div>
+                        <div class="result-value" id="predicted-total">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Рекомендация по тоталу:</div>
+                        <div class="result-value" id="total-recommendation">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Прогноз фора:</div>
+                        <div class="result-value" id="predicted-handicap">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Рекомендация по форе:</div>
+                        <div class="result-value" id="handicap-recommendation">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Темп игры:</div>
+                        <div class="result-value" id="game-pace">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Прогноз на конец периода:</div>
+                        <div class="result-value" id="period-prediction">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Вероятность победы команды А:</div>
+                        <div class="result-value" id="win-probability-a">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Вероятность победы команды Б:</div>
+                        <div class="result-value" id="win-probability-b">--</div>
+                    </div>
+                    
+                    <div class="result-card full-width">
+                        <div class="result-title">Рекомендуемая ставка:</div>
+                        <div class="result-value" id="recommended-bet">--</div>
+                        <div class="psychology-note" id="psychology-note"></div>
+                    </div>
+                    
+                    <div class="result-card full-width">
+                        <div class="result-title">Влияние времени на прогноз:</div>
+                        <div class="result-value" id="time-impact">--</div>
+                        <div class="time-factor-display" id="time-factor-display">--</div>
+                        <div class="moon-phase-display" id="moon-phase-display">
+                            <i class="fas fa-moon moon-icon"></i>Фаза Луны: рассчитывается...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="clear-btn" id="clear-btn">
+            <i class="fas fa-trash-alt"></i> Очистить все данные
+        </button>
+        
+        <button class="instruction-btn" id="instruction-btn">
+            <i class="fas fa-info-circle"></i> Инструкция по использованию
+        </button>
+        
+        <footer>
+            <p>Аналитический инструмент для баскетбольных ставок.</p>
+            <p>Ответственность за решения лежит на вас.</p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно инструкции -->
+    <div class="modal" id="instruction-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Инструкция по использованию</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="instruction-step">
+                <h3>1. Настройка параметров матча</h3>
+                <ul class="instruction-list">
+                    <li>Выберите формат чемпионата (NBA, ФИБА и др.)</li>
+                    <li>Укажите пол спортсменов (мужчины/женщины)</li>
+                    <li>Введите названия команд</li>
+                </ul>
+            </div>
+            <div class="instruction-step">
+                <h3>2. Ввод текущего состояния матча</h3>
+                <ul class="instruction-list">
+                    <li>Укажите текущий период и оставшееся время</li>
+                    <li>Введите текущий счет команд</li>
+                    <li>Заполните статистику матча (броски, фолы, подборы)</li>
+                </ul>
+            </div>
+            <div class="instruction-step">
+                <h3>3. Анализ коэффициентов</h3>
+                <ul class="instruction-list">
+                    <li>Введите коэффициенты букмекеров</li>
+                    <li>Изучите рассчитанные вероятности</li>
+                    <li>Обратите внимание на рекомендации системы</li>
+                </ul>
+            </div>
+            <div class="instruction-step">
+                <h3>4. Принятие решения</h3>
+                <ul class="instruction-list">
+                    <li>Сравните коэффициенты букмекера с расчетными</li>
+                    <li>Учитывайте психологические факторы (пол спортсменов)</li>
+                    <li>Принимайте взвешенное решение на основе анализа</li>
+                </ul>
+            </div>
+            <div class="instruction-step">
+                <h3>5. Учет фаз Луны</h3>
+                <ul class="instruction-list">
+                    <li>Система автоматически определяет текущую фазу Луны</li>
+                    <li>Для мужских команд: полнолуние увеличивает агрессию и результативность (+5%)</li>
+                    <li>Для женских команд: полнолуние повышает точность бросков (+3%)</li>
+                    <li>Новолуние: небольшое снижение эффективности для всех</li>
+                    <li>Учет лунных фаз добавляет 0.5-1.5% точности к прогнозам</li>
+                </ul>
+            </div>
+            <div class="instruction-step">
+                <h3>Советы для успеха:</h3>
+                <ul class="instruction-list">
+                    <li>Всегда анализируйте статистику перед ставкой</li>
+                    <li>Учитывайте время матча и текущий период</li>
+                    <li>Сравнивайте коэффициенты с расчетными значениями</li>
+                    <li>Помните о ответственности за свои решения</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кастомная клавиатура -->
+    <div class="custom-keyboard" id="custom-keyboard">
+        <div class="keyboard-row">
+            <button class="keyboard-key" data-key="1">1</button>
+            <button class="keyboard-key" data-key="2">2</button>
+            <button class="keyboard-key" data-key="3">3</button>
+            <button class="keyboard-key" data-key="4">4</button>
+            <button class="keyboard-key" data-key="5">5</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="keyboard-key" data-key="6">6</button>
+            <button class="keyboard-key" data-key="7">7</button>
+            <button class="keyboard-key" data-key="8">8</button>
+            <button class="keyboard-key" data-key="9">9</button>
+            <button class="keyboard-key" data-key="0">0</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="keyboard-key" data-key=".">.</button>
+            <button class="keyboard-key" data-key="-">-</button>
+            <button class="keyboard-key" data-key=":">:</button>
+            <button class="keyboard-key" data-key="/">/</button>
+            <button class="keyboard-key" data-key="(">(</button>
+            <button class="keyboard-key" data-key=")">)</button>
+            <button class="keyboard-key" data-key="%">%</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="keyboard-key keyboard-backspace" id="keyboard-backspace">⌫</button>
+            <button class="keyboard-key keyboard-close" id="keyboard-close">Готово</button>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация чемпионатов
+        const championships = {
+            'nba': { name: 'NBA (4×12 мин)', periods: 4, periodLength: 12, otLength: 5, description: '4 периода по 12 минут, овертайм 5 минут' },
+            'fibra': { name: 'ФИБА (4×10 мин)', periods: 4, periodLength: 10, otLength: 5, description: '4 периода по 10 минут, овертайм 5 минут' },
+            'three3-long': { name: '3×3 (4×12 мин)', periods: 4, periodLength: 12, otLength: 2, description: '4 периода по 12 минут, овертайм 2 минуты' },
+            'three3-short': { name: '3×3 (4×10 мин)', periods: 4, periodLength: 10, otLength: 2, description: '4 периода по 10 минут, овертайм 2 минуты' },
+            'four4': { name: '4×4 (2×10 мин)', periods: 2, periodLength: 10, otLength: 3, description: '2 тайма по 10 минут, овертайм 3 минуты' },
+            'cyber': { name: 'Кибербаскетбол (4×5 мин)', periods: 4, periodLength: 5, otLength: 2, description: '4 периода по 5 минут, овертайм 2 минуты' }
+        };
+
+        // Текущий выбранный чемпионат
+        let currentChampionship = 'nba';
+        
+        // Текущий выбранный пол
+        let currentGender = 'men';
+
+        // Функция для расчета текущей фазы Луны
+        function calculateMoonPhase(date) {
+            // Известная эпоха: 6 января 2000 года 18:14 UTC (полнолуние)
+            const knownFullMoon = new Date(Date.UTC(2000, 0, 6, 18, 14, 0));
+            const lunarCycle = 29.530588853; // дней в лунном цикле
+            
+            // Вычисляем разницу в днях
+            const diffInMs = date - knownFullMoon;
+            const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+            
+            // Вычисляем текущую фазу
+            let phase = (diffInDays % lunarCycle) / lunarCycle;
+            if (phase < 0) phase += 1; // нормализуем от 0 до 1
+            
+            return phase;
+        }
+        
+        // Функция для определения названия фазы Луны
+        function getMoonPhaseName(phase) {
+            if (phase < 0.03 || phase >= 0.97) return "Новолуние";
+            if (phase < 0.22) return "Растущая луна";
+            if (phase < 0.28) return "Первая четверть";
+            if (phase < 0.47) return "Прибывающая луна";
+            if (phase < 0.53) return "Полнолуние";
+            if (phase < 0.72) return "Убывающая луна";
+            if (phase < 0.78) return "Последняя четверть";
+            return "Стареющая луна";
+        }
+        
+        // Функция для получения иконки фазы Луны
+        function getMoonPhaseIcon(phase) {
+            if (phase < 0.03 || phase >= 0.97) return "fa-moon";
+            if (phase < 0.22) return "fa-moon";
+            if (phase < 0.28) return "fa-moon";
+            if (phase < 0.47) return "fa-moon";
+            if (phase < 0.53) return "fa-moon";
+            if (phase < 0.72) return "fa-moon";
+            if (phase < 0.78) return "fa-moon";
+            return "fa-moon";
+        }
+        
+        // Функция для расчета влияния Луны на команды
+        function calculateMoonInfluence(moonPhase, gender) {
+            let influence = 1.0;
+            let note = "";
+            
+            // Определяем, является ли фаза особенной
+            const isNewMoon = moonPhase < 0.03 || moonPhase >= 0.97;
+            const isFullMoon = moonPhase >= 0.47 && moonPhase < 0.53;
+            const isQuarterMoon = (moonPhase >= 0.22 && moonPhase < 0.28) || (moonPhase >= 0.72 && moonPhase < 0.78);
+            
+            if (isFullMoon) {
+                if (gender === 'men') {
+                    influence = 1.05; // +5% к эффективности для мужчин в полнолуние
+                    note = "Полнолуние: повышение агрессии и результативности у мужских команд";
+                } else {
+                    influence = 1.03; // +3% к эффективности для женщин в полнолуние
+                    note = "Полнолуние: улучшение точности бросков у женских команд";
+                }
+            } else if (isNewMoon) {
+                influence = 0.99; // -1% к эффективности в новолуние
+                note = "Новолуние: небольшое снижение эффективности для всех";
+            } else if (isQuarterMoon) {
+                influence = 1.01; // +1% к эффективности в четверти
+                note = "Фаза четверти: небольшое повышение активности";
+            } else {
+                note = "Нормальное лунное влияние";
+            }
+            
+            return { influence, note };
+        }
+
+        // Обновление текущего времени
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ru-RU');
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        // Обновляем время каждую секунду
+        setInterval(updateTime, 1000);
+        updateTime(); // initial call
+        
+        // Переменные для кастомной клавиатуры
+        let activeInput = null;
+        let activeStatField = null;
+        let activeTeamField = null;
+        let activeOddsField = null;
+        let activeMatchTimeField = null;
+        const keyboard = document.getElementById('custom-keyboard');
+        
+        // Обработчики для выбора чемпионата
+        document.getElementById('championship-button').addEventListener('click', function() {
+            document.getElementById('championship-dropdown').classList.toggle('show');
+        });
+        
+        document.querySelectorAll('.championship-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const format = this.dataset.format;
+                currentChampionship = format;
+                
+                // Обновляем отображение выбранного чемпионата
+                document.getElementById('selected-championship').textContent = championships[format].name;
+                document.getElementById('championship-info').textContent = `Формат: ${championships[format].description}`;
+                
+                // Убираем активный класс у всех опций и добавляем текущей
+                document.querySelectorAll('.championship-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Скрываем dropdown
+                document.getElementById('championship-dropdown').classList.remove('show');
+                
+                // Пересчитываем прогнозы
+                calculatePredictions();
+            });
+        });
+        
+        // Обработчики для выбора пола
+        document.querySelectorAll('.gender-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentGender = this.dataset.gender;
+                
+                // Убираем активный класс у всех кнопок и добавляем текущей
+                document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Пересчитываем прогнозы
+                calculatePredictions();
+            });
+        });
+        
+        // Закрываем dropdown при клике вне его
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.championship-selector')) {
+                document.getElementById('championship-dropdown').classList.remove('show');
+            }
+        });
+        
+        // Обработчики для полей ввода - показ кастомной клавиатуры
+        const inputFields = document.querySelectorAll('input[readonly]');
+        inputFields.forEach(input => {
+            input.addEventListener('focus', function(e) {
+                e.preventDefault();
+                activeInput = this;
+                keyboard.style.display = 'block';
+                
+                // Добавляем класс для выделения активного поля
+                inputFields.forEach(field => field.classList.remove('input-active'));
+                this.classList.add('input-active');
+            });
+        });
+        
+        // Обработчик для редактирования времени матча
+        document.getElementById('match-time-editable').addEventListener('click', function(e) {
+            e.preventDefault();
+            activeMatchTimeField = this;
+            const currentValue = this.textContent;
+            
+            // Создаем временное поле ввода
+            const tempInput = document.createElement('input');
+            tempInput.type = 'text';
+            tempInput.value = currentValue.replace(' | Время: --:--:--', '');
+            tempInput.classList.add('stat-input');
+            tempInput.setAttribute('readonly', 'readonly');
+            tempInput.style.fontSize = '1rem';
+            tempInput.style.textAlign = 'center';
+            tempInput.style.width = '100%;
+            tempInput.style.background = 'transparent';
+            tempInput.style.color = 'inherit';
+            tempInput.style.border = '1px dashed var(--primary-color)';
+            
+            // Заменяем содержимое на поле ввода
+            this.innerHTML = '';
+            this.appendChild(tempInput);
+            
+            // Показываем кастомную клавиатуру
+            keyboard.style.display = 'block';
+            
+            // Обработчик завершения редактирования
+            const finishEdit = () => {
+                const newValue = tempInput.value;
+                this.innerHTML = newValue + ' | Время: <span id="current-time">--:--:--</span>';
+                
+                // Парсим введенные данные
+                const match = newValue.match(/(\d+)-я (четверть|тайм), (\d+):(\d+)/);
+                if (match) {
+                    const period = match[1];
+                    const minutes = match[3];
+                    const seconds = match[4];
+                    
+                    // Обновляем поля ввода
+                    document.getElementById('current-period').value = period;
+                    document.getElementById('time-remaining').value = `${minutes}:${seconds}`;
+                    
+                    // Обновляем отображение данных
+                    updateDataDisplay();
+                    
+                    // Активируем соответствующую кнопку периода
+                    document.querySelectorAll('.period-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.dataset.period === period) {
+                            btn.classList.add('active');
+                        }
+                    });
+                    
+                    // Пересчитываем прогнозы
+                    calculatePredictions();
+                }
+                
+                keyboard.style.display = 'none';
+                updateTime(); // Обновляем время
+            };
+            
+            // Обработчик для кнопки "Готово"
+            const finishHandler = () => {
+                finishEdit();
+                document.getElementById('keyboard-close').removeEventListener('click', finishHandler);
+            };
+            
+            document.getElementById('keyboard-close').addEventListener('click', finishHandler);
+        });
+        
+        // Функция обновления отображения данных
+        function updateDataDisplay() {
+            document.getElementById('total-display').textContent = document.getElementById('total-line').value || '--';
+            document.getElementById('handicap-display').textContent = document.getElementById('handicap-line').value || '--';
+            
+            const period = document.getElementById('current-period').value;
+            let periodText;
+            if (period === 'ot') {
+                periodText = 'Овертайм';
+            } else {
+                periodText = period + '-й период';
+            }
+            document.getElementById('period-display').textContent = periodText;
+            
+            document.getElementById('time-display').textContent = document.getElementById('time-remaining').value || '--';
+            document.getElementById('score-a-display-short').textContent = document.getElementById('score-a').value || '--';
+            document.getElementById('score-b-display-short').textContent = document.getElementById('score-b').value || '--';
+        }
+        
+        // Автоматическое обновление счета при изменении очков
+        document.getElementById('score-a').addEventListener('input', function() {
+            document.getElementById('score-a-display').textContent = this.value || '';
+            document.getElementById('score-a-display-short').textContent = this.value || '';
+            calculatePredictions();
+        });
+        
+        document.getElementById('score-b').addEventListener('input', function() {
+            document.getElementById('score-b-display').textContent = this.value || '';
+            document.getElementById('score-b-display-short').textContent = this.value || '';
+            calculatePredictions();
+        });
+        
+        // Обработчики для редактирования названий команд
+        const teamFields = document.querySelectorAll('.team');
+        teamFields.forEach(field => {
+            field.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeTeamField = this;
+                const currentValue = this.textContent;
+                
+                // Создаем временное поле ввода
+                const tempInput = document.createElement('input');
+                tempInput.type = 'text';
+                tempInput.value = currentValue;
+                tempInput.classList.add('stat-input');
+                tempInput.setAttribute('readonly', 'readonly');
+                
+                // Заменяем содержимое на поле ввода
+                this.innerHTML = '';
+                this.appendChild(tempInput);
+                
+                // Показываем кастомную клавиатуру
+                keyboard.style.display = 'block';
+                
+                // Обработчик завершения редактирования
+                const finishEdit = () => {
+                    this.textContent = tempInput.value;
+                    keyboard.style.display = 'none';
+                    
+                    // Обновляем заголовки в статистике
+                    if (this.id === 'team-a') {
+                        document.getElementById('team-a-header').textContent = tempInput.value;
+                        document.getElementById('team-a-label').textContent = tempInput.value;
+                        document.getElementById('team-a-short').textContent = tempInput.value.substring(0, 3).toUpperCase();
+                    } else {
+                        document.getElementById('team-b-header').textContent = tempInput.value;
+                        document.getElementById('team-b-label').textContent = tempInput.value;
+                        document.getElementById('team-b-short').textContent = tempInput.value.substring(0, 3).toUpperCase();
+                    }
+                };
+                
+                // Обработчик для кнопки "Готово"
+                const finishHandler = () => {
+                    finishEdit();
+                    document.getElementById('keyboard-close').removeEventListener('click', finishHandler);
+                };
+                
+                document.getElementById('keyboard-close').addEventListener('click', finishHandler);
+            });
+        });
+        
+        // Обработчики для редактируемой статистика
+        const statFields = document.querySelectorAll('.stats-editable');
+        statFields.forEach(field => {
+            field.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeStatField = this;
+                const fieldId = this.getAttribute('data-field');
+                const currentValue = document.getElementById(fieldId).textContent;
+                
+                // Создаем временное поле ввода
+                const tempInput = document.createElement('input');
+                tempInput.type = 'text';
+                tempInput.value = currentValue;
+                tempInput.classList.add('stat-input');
+                tempInput.setAttribute('readonly', 'readonly');
+                
+                // Заменяем содержимое на поле ввода
+                this.innerHTML = '';
+                this.appendChild(tempInput);
+                
+                // Показываем кастомную клавиатуру
+                keyboard.style.display = 'block';
+                
+                // Обработчик завершения редактирования
+                const finishEdit = () => {
+                    document.getElementById(fieldId).textContent = tempInput.value;
+                    this.innerHTML = tempInput.value;
+                    keyboard.style.display = 'none';
+                    calculatePredictions(); // Пересчитываем прогнозы
+                };
+                
+                // Обработчик для кнопки "Готово"
+                const finishHandler = () => {
+                    finishEdit();
+                    document.getElementById('keyboard-close').removeEventListener('click', finishHandler);
+                };
+                
+                document.getElementById('keyboard-close').addEventListener('click', finishHandler);
+            });
+        });
+        
+        // Обработчики для редактирования коэффициентов
+        const oddsFields = document.querySelectorAll('.odds-editable');
+        oddsFields.forEach(field => {
+            field.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeOddsField = this;
+                const currentValue = this.textContent;
+                
+                // Создаем временное поле ввода
+                const tempInput = document.createElement('input');
+                tempInput.type = 'text';
+                tempInput.value = currentValue;
+                tempInput.classList.add('stat-input');
+                tempInput.setAttribute('readonly', 'readonly');
+                tempInput.style.fontSize = '1.1rem';
+                tempInput.style.fontWeight = 'bold';
+                tempInput.style.textAlign = 'center';
+                tempInput.style.width = '100%';
+                
+                // Заменяем содержимое на поле ввода
+                this.innerHTML = '';
+                this.appendChild(tempInput);
+                
+                // Показываем кастомную клавиатуру
+                keyboard.style.display = 'block';
+                
+                // Обработчик завершения редактирования
+                const finishEdit = () => {
+                    this.textContent = tempInput.value;
+                    keyboard.style.display = 'none';
+                    calculatePredictions(); // Пересчитываем прогнозы
+                };
+                
+                // Обработчик для кнопки "Готово"
+                const finishHandler = () => {
+                    finishEdit();
+                    document.getElementById('keyboard-close').removeEventListener('click', finishHandler);
+                };
+                
+                document.getElementById('keyboard-close').addEventListener('click', finishHandler);
+            });
+        });
+        
+        // Обработчики для кнопок клавиатуры
+        document.querySelectorAll('.keyboard-key[data-key]').forEach(button => {
+            button.addEventListener('click', function() {
+                const key = this.getAttribute('data-key');
+                
+                if (activeInput) {
+                    activeInput.value += key;
+                    updateDataDisplay();
+                    calculatePredictions(); // Автоматический расчет
+                } else if (activeStatField) {
+                    const inputField = activeStatField.querySelector('input');
+                    if (inputField) {
+                        inputField.value += key;
+                    }
+                } else if (activeTeamField) {
+                    const inputField = activeTeamField.querySelector('input');
+                    if (inputField) {
+                        inputField.value += key;
+                    }
+                } else if (activeOddsField) {
+                    const inputField = activeOddsField.querySelector('input');
+                    if (inputField) {
+                        inputField.value += key;
+                    }
+                } else if (activeMatchTimeField) {
+                    const inputField = activeMatchTimeField.querySelector('input');
+                    if (inputField) {
+                        inputField.value += key;
+                    }
+                }
+            });
+        });
+        
+        // Обработчик для backspace
+        document.getElementById('keyboard-backspace').addEventListener('click', function() {
+            if (activeInput) {
+                activeInput.value = activeInput.value.slice(0, -1);
+                updateDataDisplay();
+                calculatePredictions(); // Автоматический расчет
+            } else if (activeStatField) {
+                const inputField = activeStatField.querySelector('input');
+                if (inputField) {
+                    inputField.value = inputField.value.slice(0, -1);
+                }
+            } else if (activeTeamField) {
+                const inputField = activeTeamField.querySelector('input');
+                if (inputField) {
+                    inputField.value = inputField.value.slice(0, -1);
+                }
+            } else if (activeOddsField) {
+                const inputField = activeOddsField.querySelector('input');
+                if (inputField) {
+                    inputField.value = inputField.value.slice(0, -1);
+                }
+            } else if (activeMatchTimeField) {
+                const inputField = activeMatchTimeField.querySelector('input');
+                if (inputField) {
+                    inputField.value = inputField.value.slice(0, -1);
+                }
+            }
+        });
+        
+        // Обработчик для закрытия клавиатуры
+        document.getElementById('keyboard-close').addEventListener('click', function() {
+            keyboard.style.display = 'none';
+            if (activeInput) {
+                activeInput.classList.remove('input-active');
+                activeInput = null;
+            }
+            if (activeStatField) {
+                activeStatField = null;
+            }
+            if (activeTeamField) {
+                activeTeamField = null;
+            }
+            if (activeOddsField) {
+                activeOddsField = null;
+            }
+            if (activeMatchTimeField) {
+                activeMatchTimeField = null;
+            }
+        });
+        
+        // Обработчики кнопок периодов
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('current-period').value = this.dataset.period;
+                updateMatchTimeDisplay();
+                updateDataDisplay();
+                calculatePredictions();
+            });
+        });
+        
+        // Обработчики вкладки
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                
+                // Убираем активный класс у всех вкладков
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Добавляем активный класс текущей вкладке
+                this.classList.add('active');
+                
+                // Скрываем все разделы
+                document.getElementById('stats-tab').classList.remove('active');
+                document.getElementById('main-tab').classList.remove('active');
+                document.getElementById('analysis-tab').classList.remove('active');
+                
+                // Показываем нужный раздел
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // Обработчик переключения темы
+        document.getElementById('theme-switcher').addEventListener('click', function() {
+            document.body.classList.toggle('light-theme');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('light-theme')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+        
+        // Обработчик кнопки очистки
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            if (confirm('Вы уверены, что хотите очистить все данные?')) {
+                // Очищаем поля ввода
+                document.getElementById('total-line').value = '';
+                document.getElementById('handicap-line').value = '';
+                document.getElementById('time-remaining').value = '';
+                document.getElementById('score-a').value = '';
+                document.getElementById('score-b').value = '';
+                document.getElementById('avg-points').value = '';
+
+                // Сбрасываем счет
+                document.getElementById('score-a-display').textContent = '';
+                document.getElementById('score-b-display').textContent = '';
+
+                // Обновляем отображение данных
+                updateDataDisplay();
+
+                // Сбрасываем период
+                document.getElementById('current-period').value = '3';
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-period="3"]').classList.add('active');
+
+                // Сбрасываем статистику
+                document.getElementById('team-a-free-throws').textContent = '';
+                document.getElementById('team-b-free-throws').textContent = '';
+                document.getElementById('team-a-two-pointers').textContent = '';
+                document.getElementById('team-b-two-pointers').textContent = '';
+                document.getElementById('team-a-three-pointers').textContent = '';
+                document.getElementById('team-b-three-pointers').textContent = '';
+                document.getElementById('team-a-fouls').textContent = '';
+                document.getElementById('team-b-fouls').textContent = '';
+                document.getElementById('team-a-rebounds').textContent = '';
+                document.getElementById('team-b-rebounds').textContent = '';
+                document.getElementById('team-a-turnovers').textContent = '';
+                document.getElementById('team-b-turnovers').textContent = '';
+
+                // Сбрасываем коэффициенты
+                document.getElementById('odds-p1').textContent = '';
+                document.getElementById('odds-p2').textContent = '';
+                document.getElementById('odds-total-over').textContent = '';
+                document.getElementById('odds-total-under').textContent = '';
+
+                // Обновляем отображение времени
+                updateMatchTimeDisplay();
+
+                // Скрываем клавиатуру
+                keyboard.style.display = 'none';
+
+                // Сбрасываем результаты
+                document.getElementById('predicted-total').textContent = '--';
+                document.getElementById('total-recommendation').textContent = '--';
+                document.getElementById('predicted-handicap').textContent = '--';
+                document.getElementById('handicap-recommendation').textContent = '--';
+                document.getElementById('game-pace').textContent = '--';
+                document.getElementById('period-prediction').textContent = '--';
+                document.getElementById('win-probability-a').textContent = '--';
+                document.getElementById('win-probability-b').textContent = '--';
+                document.getElementById('recommended-bet').textContent = '--';
+                document.getElementById('time-impact').textContent = '--';
+                document.getElementById('time-factor-display').textContent = '--';
+                document.getElementById('calculated-p1').textContent = '--';
+                document.getElementById('calculated-p2').textContent = '--';
+                document.getElementById('calculated-total-over').textContent = '--';
+                document.getElementById('calculated-total-under').textContent = '--';
+
+                // Показываем сообщение
+                alert('Все данные очищены!');
+            }
+        });
+        
+        // Обработчик кнопки инструкции
+        document.getElementById('help-btn').addEventListener('click', function() {
+            document.getElementById('instruction-modal').style.display = 'flex';
+        });
+        
+        // Закрытие модального окна
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('instruction-modal').style.display = 'none';
+        });
+        
+        // Закрытие модального окна при клике вне его
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('instruction-modal')) {
+                document.getElementById('instruction-modal').style.display = 'none';
+            }
+        });
+        
+        // Функция обновления отображения времени матча
+        function updateMatchTimeDisplay() {
+            const period = document.getElementById('current-period').value;
+            const timeRemaining = document.getElementById('time-remaining').value;
+            const champ = championships[currentChampionship];
+            
+            let periodText;
+            if (champ.periods === 2) {
+                // Для формата с двумя таймами
+                periodText = period === '1' ? '1-й тайм' : 
+                            period === '2' ? '2-й тайм' : 
+                            period === 'ot' ? 'Овертайм' : `${period}-й овертайм`;
+            } else {
+                // Для формата с четырьмя периодами
+                periodText = period === '1' ? '1-я четверть' : 
+                            period === '2' ? '2-я четверть' : 
+                            period === '3' ? '3-я четверть' : 
+                            period === '4' ? '4-я четверть' : 
+                            period === 'ot' ? 'Овертайм' : `${period}-й овертайм`;
+            }
+            
+            // Если время пустое, не отображаем его
+            const timeDisplay = timeRemaining ? `, ${timeRemaining}` : '';
+            document.getElementById('match-time-editable').innerHTML = `${periodText}${timeDisplay} | Время: <span id="current-time">--:--:--</span>`;
+            updateTime();
+        }
+        
+        // Функция расчета прогнозов с учетом пола и психологических факторов
+        function calculatePredictions() {
+            // Получаем текущую дату и рассчитываем фазу Луны
+            const currentDate = new Date();
+            const moonPhase = calculateMoonPhase(currentDate);
+            const moonPhaseName = getMoonPhaseName(moonPhase);
+            const moonPhaseIcon = getMoonPhaseIcon(moonPhase);
+            const moonInfluence = calculateMoonInfluence(moonPhase, currentGender);
+            
+            // Обновляем отображение информации о Луне
+            document.getElementById('moon-phase-display').innerHTML = 
+                `<i class="fas ${moonPhaseIcon} moon-icon"></i>Фаза Луны: ${moonPhaseName} (влияние: ${((moonInfluence.influence - 1) * 100).toFixed(1)}%)`;
+            
+            const champ = championships[currentChampionship];
+            const isCyber = champ.periodLength === 5;
+
+            // Получаем значения из формы
+            const totalLine = parseFloat(document.getElementById('total-line').value) || 0;
+            const handicapLine = parseFloat(document.getElementById('handicap-line').value) || 0;
+            const currentPeriod = document.getElementById('current-period').value;
+            const timeRemaining = document.getElementById('time-remaining').value;
+            const scoreA = parseInt(document.getElementById('score-a').value) || 0;
+            const scoreB = parseInt(document.getElementById('score-b').value) || 0;
+            const avgPoints = parseInt(document.getElementById('avg-points').value) || (isCyber ? 45 : 45);
+            
+            // Получаем значения статистики
+            const teamAFreeThrows = document.getElementById('team-a-free-throws').textContent;
+            const teamBFreeThrows = document.getElementById('team-b-free-throws').textContent;
+            const teamATwoPointers = parseInt(document.getElementById('team-a-two-pointers').textContent) || 0;
+            const teamBTwoPointers = parseInt(document.getElementById('team-b-two-pointers').textContent) || 0;
+            const teamAThreePointers = parseInt(document.getElementById('team-a-three-pointers').textContent) || 0;
+            const teamBThreePointers = parseInt(document.getElementById('team-b-three-pointers').textContent) || 0;
+            const teamAFouls = parseInt(document.getElementById('team-a-fouls').textContent) || 0;
+            const teamBFouls = parseInt(document.getElementById('team-b-fouls').textContent) || 0;
+            const teamARebounds = parseInt(document.getElementById('team-a-rebounds').textContent) || 0;
+            const teamBRebounds = parseInt(document.getElementById('team-b-rebounds').textContent) || 0;
+            const teamATurnovers = parseInt(document.getElementById('team-a-turnovers').textContent) || 0;
+            const teamBTurnovers = parseInt(document.getElementById('team-b-turnovers').textContent) || 0;
+            
+            // Получаем коэффициенты букмекеров
+            const oddsP1 = parseFloat(document.getElementById('odds-p1').textContent) || 0;
+            const oddsP2 = parseFloat(document.getElementById('odds-p2').textContent) || 0;
+            const oddsTotalOver = parseFloat(document.getElementById('odds-total-over').textContent) || 0;
+            const oddsTotalUnder = parseFloat(document.getElementById('odds-total-under').textContent) || 0;
+            
+            // Обновляем счет в матче
+            document.getElementById('score-a-display').textContent = scoreA || '';
+            document.getElementById('score-b-display').textContent = scoreB || '';
+            document.getElementById('score-a-display-short').textContent = scoreA || '';
+            document.getElementById('score-b-display-short').textContent = scoreB || '';
+            
+            // Парсим оставшееся время
+            const timeParts = timeRemaining.split(':');
+            const remainingMinutes = parseInt(timeParts[0]) || 0;
+            const remainingSeconds = parseInt(timeParts[1]) || 0;
+            const totalRemainingSeconds = remainingMinutes * 60 + remainingSeconds;
+            
+            // Рассчитываем прошедшее время в зависимости от периода и формата
+            let elapsedMinutes;
+            let isOvertime = currentPeriod === 'ot' || parseInt(currentPeriod) > champ.periods;
+            
+            if (!isOvertime) {
+                const periodNum = parseInt(currentPeriod);
+                elapsedMinutes = (champ.periodLength * (periodNum - 1)) + (champ.periodLength - (totalRemainingSeconds / 60));
+            } else {
+                const overtimeNum = currentPeriod === 'ot' ? 1 : parseInt(currentPeriod) - champ.periods;
+                elapsedMinutes = (champ.periodLength * champ.periods) + (champ.otLength * (overtimeNum - 1)) + (champ.otLength - (totalRemainingSeconds / 60));
+            }
+            
+            // Рассчитываем текущий темп игры (очков в минуту)
+            const totalPoints = scoreA + scoreB;
+            const gamePace = totalPoints > 0 ? (totalPoints / elapsedMinutes).toFixed(2) : "0.00";
+            
+            // Рассчитываем эффективность команд на основе статистики
+            const teamAEfficiency = calculateEfficiency(teamATwoPointers, teamAThreePointers, teamAFreeThrows, teamARebounds, teamATurnovers) * moonInfluence.influence;
+            const teamBEfficiency = calculateEfficiency(teamBTwoPointers, teamBThreePointers, teamBFreeThrows, teamBRebounds, teamBTurnovers) * moonInfluence.influence;
+            
+            // Корректируем темп игры на основе эффективности
+            const efficiencyFactor = (teamAEfficiency + teamBEfficiency) / 2;
+            
+            // Учет времени матча для корректировки прогноза
+            const timeFactor = calculateTimeFactor(currentPeriod, totalRemainingSeconds, champ);
+            
+            // Учет пола спортсменов для корректировки прогноза
+            const genderFactor = calculateGenderFactor(currentGender, currentPeriod, totalRemainingSeconds);
+            
+            const adjustedGamePace = totalPoints > 0 ? (parseFloat(gamePace) * efficiencyFactor * timeFactor * genderFactor.pace).toFixed(2) : "0.00";
+            
+            // Прогнозируем общее количество очков в матчах
+            let totalProjected;
+            if (!isOvertime) {
+                const remainingTime = (champ.periodLength * champ.periods) - elapsedMinutes;
+                totalProjected = Math.round(totalPoints + (parseFloat(adjustedGamePace) * remainingTime));
+            } else {
+                const overtimeNum = currentPeriod === 'ot' ? 1 : parseInt(currentPeriod) - champ.periods;
+                const remainingTime = (champ.otLength * (overtimeNum)) - (champ.otLength - (totalRemainingSeconds / 60));
+                totalProjected = Math.round(totalPoints + (parseFloat(adjustedGamePace) * remainingTime));
+            }
+            
+            // Корректируем прогноз на основе фолов (больше фолов -> больше штрафных)
+            const foulFactor = 1 + ((teamAFouls + teamBFouls) / 40) * 0.1;
+            totalProjected = Math.round(totalProjected * foulFactor);
+            
+            // Прогнозируем окончательный счет
+            const pointsDiff = scoreA - scoreB;
+            const efficiencyDiff = teamAEfficiency - teamBEfficiency;
+            let projectedDiff;
+            
+            if (!isOvertime) {
+                const remainingTime = (champ.periodLength * champ.periods) - elapsedMinutes;
+                projectedDiff = Math.round(pointsDiff + (efficiencyDiff * remainingTime * timeFactor * genderFactor.performance));
+            } else {
+                const overtimeNum = currentPeriod === 'ot' ? 1 : parseInt(currentPeriod) - champ.periods;
+                const remainingTime = (champ.otLength * (overtimeNum)) - (champ.otLength - (totalRemainingSeconds / 60));
+                projectedDiff = Math.round(pointsDiff + (efficiencyDiff * remainingTime * timeFactor * genderFactor.performance));
+            }
+            
+            // Рассчитываем вероятности победы
+            const winProbabilityA = calculateWinProbability(scoreA, scoreB, teamAEfficiency, teamBEfficiency, elapsedMinutes, currentPeriod, timeFactor, champ, genderFactor);
+            const winProbabilityB = 100 - winProbabilityA;
+            
+            // Рассчитываем наши коэффициенты на основе вероятностей
+            const calculatedP1 = winProbabilityA > 0 ? (100 / winProbabilityA).toFixed(2) : "0.00";
+            const calculatedP2 = winProbabilityB > 0 ? (100 / winProbabilityB).toFixed(2) : "0.00";
+            
+            // Определяем рекомендации
+            let totalRecommendation, handicapRecommendation, recommendedBet;
+            
+            if (totalProjected > totalLine) {
+                totalRecommendation = "СТАВИТЬ НА БОЛЬШЕ";
+            } else {
+                totalRecommendation = "СТАВИТЬ НА МЕНЬШЕ";
+            }
+            
+            if (projectedDiff > handicapLine) {
+                handicapRecommendation = "СТАВИТЬ на команду А";
+            } else {
+                handicapRecommendation = "СТАВИТЬ на команду Б";
+            }
+            
+            // Определяем рекомендуемую ставку
+            const valueBetP1 = (winProbabilityA / 100) > (1 / oddsP1);
+            const valueBetP2 = (winProbabilityB / 100) > (1 / oddsP2);
+            
+            if (valueBetP1 && valueBetP2) {
+                if ((winProbabilityA / 100) - (1 / oddsP1) > (winProbabilityB / 100) - (1 / oddsP2)) {
+                    recommendedBet = `П1 (${document.getElementById('team-a').textContent}) - VALUE BET`;
+                } else {
+                    recommendedBet = `П2 (${document.getElementById('team-b').textContent}) - VALUE BET`;
+                }
+            } else if (valueBetP1) {
+                recommendedBet = `П1 (${document.getElementById('team-a').textContent}) - VALUE BET`;
+            } else if (valueBetP2) {
+                recommendedBet = `П2 (${document.getElementById('team-b').textContent}) - VALUE BET`;
+            } else {
+                recommendedBet = "Нет выгодных ставки";
+            }
+            
+            // Прогноз на конец периода
+            const periodProjection = Math.round((parseFloat(adjustedGamePace) * (isOvertime ? champ.otLength : champ.periodLength)));
+            
+            // Обновляем UI с результатами
+            document.getElementById('predicted-total').textContent = totalProjected;
+            document.getElementById('predicted-total').className = 'result-value ' + 
+                (totalProjected > totalLine ? 'positive' : 'negative');
+                
+            document.getElementById('total-recommendation').textContent = totalRecommendation;
+            document.getElementById('total-recommendation').className = 'result-value ' + 
+                (totalProjected > totalLine ? 'positive' : 'negative');
+                
+            document.getElementById('predicted-handicap').textContent = projectedDiff;
+            document.getElementById('predicted-handicap').className = 'result-value ' + 
+                (projectedDiff > handicapLine ? 'positive' : 'negative');
+                
+            document.getElementById('handicap-recommendation').textContent = handicapRecommendation;
+            document.getElementById('handicap-recommendation').className = 'result-value ' + 
+                (projectedDiff > handicapLine ? 'positive' : 'negative');
+                
+            document.getElementById('game-pace').textContent = adjustedGamePace + " очков/минуту";
+            document.getElementById('game-pace').className = 'result-value neutral';
+            
+            document.getElementById('period-prediction').textContent = periodProjection + " очков за период";
+            document.getElementById('period-prediction').className = 'result-value neutral';
+            
+            document.getElementById('win-probability-a').textContent = winProbabilityA.toFixed(1) + "%";
+            document.getElementById('win-probability-a').className = 'result-value ' + 
+                (winProbabilityA > 50 ? 'positive' : 'negative');
+                
+            document.getElementById('win-probability-b').textContent = winProbabilityB.toFixed(1) + "%";
+            document.getElementById('win-probability-b').className = 'result-value ' + 
+                (winProbabilityB > 50 ? 'positive' : 'negative');
+                
+            document.getElementById('recommended-bet').textContent = recommendedBet;
+            document.getElementById('recommended-bet').className = 'result-value ' + 
+                (recommendedBet.includes('VALUE BET') ? 'positive' : 'neutral');
+            
+            // Психологическая заметка
+            document.getElementById('psychology-note').textContent = `${genderFactor.note} ${moonInfluence.note}`;
+            
+            // Обновляем расчетные коэффициенты
+            document.getElementById('calculated-p1').textContent = calculatedP1;
+            document.getElementById('calculated-p2').textContent = calculatedP2;
+            
+            // Расчет коэффициентов для тотала
+            const totalOverProbability = calculateTotalProbability(totalProjected, totalLine, true);
+            const totalUnderProbability = 100 - totalOverProbability;
+            
+            document.getElementById('calculated-total-over').textContent = totalOverProbability > 0 ? (100 / totalOverProbability).toFixed(2) : "0.00";
+            document.getElementById('calculated-total-under').textContent = totalUnderProbability > 0 ? (100 / totalUnderProbability).toFixed(2) : "0.00";
+            
+            // Отображаем влияние времени на прогноз
+            let timeImpactText = "";
+            if (timeFactor > 1.1) {
+                timeImpactText = "Высокий темп игры - больше очков";
+            } else if (timeFactor > 1.0) {
+                timeImpactText = "Повышенный темп игры";
+            } else if (timeFactor > 0.9) {
+                timeImpactText = "Нормальный темп игры";
+            } else {
+                timeImpactText = "Замедленный темп игры - меньше очков";
+            }
+            
+            document.getElementById('time-impact').textContent = timeImpactText;
+            document.getElementById('time-factor-display').textContent = `Коэффициент времени: ${timeFactor.toFixed(2)}`;
+        }
+        
+        // Функция расчета коэффициента времени с учетом формата чемпионата
+        function calculateTimeFactor(period, remainingSeconds, champ) {
+            // Базовый коэффициент в зависимости от периода
+            let baseFactor;
+            const periodNum = period === 'ot' ? champ.periods + 1 : parseInt(period);
+            const isCyber = champ.periodLength === 5;
+
+            if (periodNum <= champ.periods) {
+                // Основные периodes
+                if (champ.periods === 2) {
+                    // Для формата с двумя таймами
+                    baseFactor = periodNum === 1 ? 1.1 : 0.9;
+                } else {
+                    // Для формата с четырьмя периодами
+                    switch(periodNum) {
+                        case 1: baseFactor = isCyber ? 1.0 : 1.1; break;
+                        case 2: baseFactor = 1.0; break;
+                        case 3: baseFactor = isCyber ? 1.0 : 0.95; break;
+                        case 4: baseFactor = isCyber ? 0.95 : 0.9; break;
+                        default: baseFactor = 1.0;
+                    }
+                }
+            } else {
+                // Овертайм
+                baseFactor = 1.0;
+            }
+
+            // Корректировка на основе оставшегося времени
+            const periodLength = periodNum <= champ.periods ? champ.periodLength : champ.otLength;
+            const timeImpact = isCyber ? 0.1 : 0.2;
+            const timeFactor = 1 - (remainingSeconds / (periodLength * 60)) * timeImpact;
+
+            return baseFactor * timeFactor;
+        }
+        
+        // Функция расчета коэффициента пола и психологических факторов
+        function calculateGenderFactor(gender, period, remainingSeconds) {
+            const periodNum = parseInt(period);
+            let paceFactor = 1.0;
+            let performanceFactor = 1.0;
+            let note = "";
+            
+            if (gender === 'men') {
+                // Мужчины: более агрессивны в концовке, выше темп, но больше ошибок под давлением
+                paceFactor = 1.1;
+                if (periodNum >= 4 || period === 'ot') {
+                    performanceFactor = 1.05; // Мужчины лучше проявляют себя в напряженных моментах
+                    note = "Мужчины: выше агрессия в концовке, больше риска";
+                } else {
+                    performanceFactor = 1.0;
+                    note = "Мужчины: стабильная игра, высокий темп";
+                }
+            } else {
+                // Женщины: более стабильны, меньше ошибок под давлением, но ниже темп
+                paceFactor = 0.95;
+                if (periodNum >= 4 || period === 'ot') {
+                    performanceFactor = 0.98; // Женщины более стабильны под давлением
+                    note = "Женщины: выше стабильность в концовке, меньше ошибок";
+                } else {
+                    performanceFactor = 1.0;
+                    note = "Женщины: стабильная игра, точные броски";
+                }
+            }
+            
+            // Учет оставшегося времени
+            const remainingTimeImpact = (remainingSeconds / 60) / 10; // Влияние оставшегося времени
+            if (remainingSeconds < 120) { // Менее 2 минут
+                if (gender === 'men') {
+                    performanceFactor *= 1.05; // Мужчины лучше в последние минуты
+                } else {
+                    performanceFactor *= 1.02; // Женщины стабильны в концовке
+                }
+            }
+            
+            return {
+                pace: paceFactor,
+                performance: performanceFactor,
+                note: note
+            };
+        }
+        
+        // Функция расчета эффективности команды
+        function calculateEfficiency(twoPointers, threePointers, freeThrows, rebounds, turnovers) {
+            // Извлекаем процент попадания штрафных бросков
+            const freeThrowMatch = freeThrows.match(/(\d+)\/(\d+)/);
+            let freeThrowPercentage = 0.7;
+            
+            if (freeThrowMatch) {
+                const made = parseInt(freeThrowMatch[1]);
+                const attempts = parseInt(freeThrowMatch[2]);
+                freeThrowPercentage = attempts > 0 ? made / attempts : 0.7;
+            }
+            
+            // Рассчитываем эффективность на основе различных факторов
+            const points = twoPointers * 2 + threePointers * 3;
+            const shootingEfficiency = (twoPointers + threePointers) > 0 ? points / (twoPointers + threePointers) / 2 : 0.8;
+            const reboundEfficiency = rebounds / 40;
+            const turnoverEfficiency = 1 - (turnovers / 20);
+            
+            return 0.8 + (shootingEfficiency * 0.5 + freeThrowPercentage * 0.3 + reboundEfficiency * 0.1 + turnoverEfficiency * 0.1);
+        }
+        
+        // Функция расчета вероятности победы с учетом формата чемпионата и пола
+        function calculateWinProbability(scoreA, scoreB, efficiencyA, efficiencyB, elapsedMinutes, currentPeriod, timeFactor, champ, genderFactor) {
+            const scoreDiff = scoreA - scoreB;
+            const efficiencyDiff = efficiencyA - efficiencyB;
+            const isCyber = champ.periodLength === 5;
+            
+            // Базовая вероятность на основе текущего счета
+            const scoreWeight = isCyber ? 0.7 : 0.5;
+            let baseProbability = 50 + (scoreDiff * scoreWeight);
+            
+            // Корректировка на основе эффективности
+            baseProbability += efficiencyDiff * 10;
+            
+            // Корректировка на основе оставшегося времени
+            let timeCorrection;
+            const periodNum = currentPeriod === 'ot' ? champ.periods + 1 : parseInt(currentPeriod);
+            const isOvertime = periodNum > champ.periods;
+            
+            if (!isOvertime) {
+                const remainingTime = (champ.periodLength * champ.periods) - elapsedMinutes;
+                timeCorrection = remainingTime / (champ.periodLength * champ.periods);
+            } else {
+                const overtimeNum = periodNum - champ.periods;
+                const remainingTime = (champ.otLength * overtimeNum) - (elapsedMinutes - (champ.periodLength * champ.periods));
+                timeCorrection = remainingTime / (champ.otLength * overtimeNum);
+            }
+            
+            baseProbability = 50 + (baseProbability - 50) * timeCorrection;
+            
+            // Корректировка на основе темпа игры
+            baseProbability *= timeFactor;
+            
+            // Корректировка на основе пола
+            baseProbability *= genderFactor.performance;
+            
+            // Ограничиваем вероятность в диапазоне 1-99%
+            return Math.max(1, Math.min(99, baseProbability));
+        }
+        
+        // Функция расчета вероятности тотала
+        function calculateTotalProbability(totalProjected, totalLine, isOver) {
+            const diff = Math.abs(totalProjected - totalLine);
+            let probability;
+            
+            if (diff <= 5) {
+                probability = isOver ? 50 : 50;
+            } else if (diff <= 10) {
+                probability = isOver ? (totalProjected > totalLine ? 65 : 35) : (totalProjected > totalLine ? 35 : 65);
+            } else {
+                probability = isOver ? (totalProjected > totalLine ? 75 : 25) : (totalProjected > totalLine ? 25 : 75);
+            }
+            
+            return probability;
+        }
+        
+        // Инициализация расчетов при загрузке
+        window.addEventListener('load', function() {
+            updateMatchTimeDisplay();
+            updateDataDisplay();
+            calculatePredictions();
+            
+            // На iOS устройствах отключаем стандартную клавиатуру
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                document.querySelectorAll('input').forEach(input => {
+                    input.setAttribute('readonly', 'readonly');
+                });
+            }
+            
+            // Предотвращаем масштабирование при двойном тапе
+            document.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Предотвращаем масштабирование жестом двумя пальцами
+            document.addEventListener('touchstart', function(event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            });
+            
+            // Предотвращаем двойной тап (быстрое двойное касание) для масштабирования
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Автоматический расчет при изменении данных
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function() {
+                    updateDataDisplay();
+                    calculatePredictions();
+                });
+            });
+            
+            document.getElementById('current-period').addEventListener('change', function() {
+                updateMatchTimeDisplay();
+                updateDataDisplay();
+                calculatePredictions();
+            });
+            
+            document.getElementById('time-remaining').addEventListener('input', function() {
+                updateMatchTimeDisplay();
+                updateDataDisplay();
+                calculatePredictions();
+            });
+        });
+    </script>
+</body>
+</html>
