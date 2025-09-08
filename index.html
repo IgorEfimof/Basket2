@@ -332,11 +332,10 @@
         }
         
         .odds-section {
-            display: grid;
+            display: none;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin-bottom: 12px;
-            display: none;
         }
         
         .odds-section.active {
@@ -368,11 +367,10 @@
         }
         
         .main-content {
-            display: grid;
+            display: none;
             grid-template-columns: 1fr;
             gap: 12px;
             margin-bottom: 15px;
-            display: none;
         }
         
         .main-content.active {
@@ -1034,7 +1032,7 @@
                     <div class="form-column">
                         <div class="form-group">
                             <label for="total-line">Тотал букмекера:</label>
-                            <input type="text" id="total-line" placeholder="Напр. 180.5" inputmode="none" readonly>
+                            <input type="text" id="total-line" placeholder="Напр. 180.5" inputmode="none">
                         </div>
                         
                         <div class="form-group">
@@ -1050,31 +1048,31 @@
                         
                         <div class="form-group">
                             <label for="score-a">Очки команды А:</label>
-                            <input type="text" id="score-a" value="75" inputmode="none" readonly>
+                            <input type="text" id="score-a" value="75" inputmode="none">
                         </div>
                     </div>
                     
                     <div class="form-column">
                         <div class="form-group">
                             <label for="handicap-line">Фора букмекера:</label>
-                            <input type="text" id="handicap-line" placeholder="Напр. -5.5" inputmode="none" readonly>
+                            <input type="text" id="handicap-line" placeholder="Напр. -5.5" inputmode="none">
                         </div>
                         
                         <div class="form-group">
                             <label for="time-remaining">Оставшееся время:</label>
-                            <input type="text" id="time-remaining" placeholder="Мин:сек" value="5:00" inputmode="none" readonly>
+                            <input type="text" id="time-remaining" placeholder="Мин:сек" value="5:00" inputmode="none">
                         </div>
                         
                         <div class="form-group">
                             <label for="score-b">Очки команды Б:</label>
-                            <input type="text" id="score-b" value="68" inputmode="none" readonly>
+                            <input type="text" id="score-b" value="68" inputmode="none">
                         </div>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="avg-points">Ср. очки за период:</label>
-                    <input type="text" id="avg-points" value="45" placeholder="40-50" inputmode="none" readonly>
+                    <input type="text" id="avg-points" value="45" placeholder="40-50" inputmode="none">
                 </div>
                 
                 <div class="period-controls">
@@ -1214,7 +1212,7 @@
                 <ul class="instruction-list">
                     <li>Всегда анализируйте статистику перед ставкой</li>
                     <li>Учитывайте время матча и текущий период</li>
-                    <li>Сравнивайте коэффициенты с расчетными значениями</li>
+                    <li>Сравнивайте коэффициенты с расчетными значения</li>
                     <li>Помните о ответственности за свои решения</li>
                 </ul>
             </div>
@@ -1266,7 +1264,7 @@
         // Текущий выбранный чемпионат
         let currentChampionship = 'nba';
         
-        // Текущий выбранный пол
+        // Текульный выбранный пол
         let currentGender = 'men';
 
         // Функция для расчета текущей фазы Луны
@@ -1275,7 +1273,7 @@
             const knownFullMoon = new Date(Date.UTC(2000, 0, 6, 18, 14, 0));
             const lunarCycle = 29.530588853; // дней в лунном цикле
             
-            // Вычисляем разницу в днях
+            // Вычисляем разницу в дняс
             const diffInMs = date - knownFullMoon;
             const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
             
@@ -1410,7 +1408,7 @@
         });
         
         // Обработчики для полей ввода - показ кастомной клавиатуры
-        const inputFields = document.querySelectorAll('input[readonly]');
+        const inputFields = document.querySelectorAll('input');
         inputFields.forEach(input => {
             input.addEventListener('focus', function(e) {
                 e.preventDefault();
@@ -1434,10 +1432,9 @@
             tempInput.type = 'text';
             tempInput.value = currentValue.replace(' | Время: --:--:--', '');
             tempInput.classList.add('stat-input');
-            tempInput.setAttribute('readonly', 'readonly');
             tempInput.style.fontSize = '1rem';
             tempInput.style.textAlign = 'center';
-            tempInput.style.width = '100%;
+            tempInput.style.width = '100%';
             tempInput.style.background = 'transparent';
             tempInput.style.color = 'inherit';
             tempInput.style.border = '1px dashed var(--primary-color)';
@@ -1538,7 +1535,6 @@
                 tempInput.type = 'text';
                 tempInput.value = currentValue;
                 tempInput.classList.add('stat-input');
-                tempInput.setAttribute('readonly', 'readonly');
                 
                 // Заменяем содержимое на поле ввода
                 this.innerHTML = '';
@@ -1574,7 +1570,7 @@
             });
         });
         
-        // Обработчики для редактируемой статистика
+        // Обработчики для редактируемой статистики
         const statFields = document.querySelectorAll('.stats-editable');
         statFields.forEach(field => {
             field.addEventListener('click', function(e) {
@@ -1588,7 +1584,6 @@
                 tempInput.type = 'text';
                 tempInput.value = currentValue;
                 tempInput.classList.add('stat-input');
-                tempInput.setAttribute('readonly', 'readonly');
                 
                 // Заменяем содержимое на поле ввода
                 this.innerHTML = '';
@@ -1628,7 +1623,6 @@
                 tempInput.type = 'text';
                 tempInput.value = currentValue;
                 tempInput.classList.add('stat-input');
-                tempInput.setAttribute('readonly', 'readonly');
                 tempInput.style.fontSize = '1.1rem';
                 tempInput.style.fontWeight = 'bold';
                 tempInput.style.textAlign = 'center';
@@ -1758,7 +1752,7 @@
             tab.addEventListener('click', function() {
                 const tabId = this.dataset.tab;
                 
-                // Убираем активный класс у всех вкладков
+                // Убираем активный класс у всех вкладок
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 // Добавляем активный класс текущей вкладке
                 this.classList.add('active');
